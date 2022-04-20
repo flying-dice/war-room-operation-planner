@@ -5,6 +5,7 @@ export const exampleOperation = {
     "Example Description, https://en.wikipedia.org/wiki/Russo-Georgian_War",
   startDate: "2008-08-01T05:00:00.000Z",
   coalitions: {
+    player: "BLUFOR",
     blufor: ["GE", "US"],
     opfor: ["GE-AB", "RU"],
   },

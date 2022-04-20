@@ -1,14 +1,15 @@
 import { keyBy } from "lodash";
-import * as wrd from "@flying-dice/war-room-data";
+import {
+  symbols,
+  installations,
+  staticUnits,
+  groundUnits,
+} from "@flying-dice/war-room-data";
 
-const symbolCodes = keyBy(wrd.symbols, "id");
-const groundUnits = keyBy(wrd.groundUnits, "id");
-const staticUnits = keyBy(wrd.staticUnits, "id");
-const installations = keyBy(wrd.installations, "id");
-
-const scheme = {
-  warfighting: "S",
-};
+const symbolCodes = keyBy(symbols, "id");
+const ground = keyBy(groundUnits, "id");
+const fixed = keyBy(staticUnits, "id");
+const inst = keyBy(installations, "id");
 
 const affiliations = {
   friend: "F",
@@ -17,57 +18,53 @@ const affiliations = {
   unknown: "U",
 };
 
-const dimension = {
-  groundUnit: "G",
-  groundInstallation: "G",
-};
-
 const status = {
   present: "P",
 };
 
-const modifier1 = {
-  na: "-",
-  installation: "H",
+const forGroundUnit = ({ type }, { affiliation }) => {
+  const sid = ground[type]?.symbol;
+  const s = symbolCodes[sid];
+
+  return [
+    s.scheme,
+    affiliations[affiliation] || affiliations.unknown,
+    s.dimension,
+    status.present,
+    s.function || symbolCodes.unit,
+    s.modifier1,
+    s.modifier2,
+  ].join("");
 };
 
-const modifier2 = {
-  na: "-",
-  brigade: "H",
-  battery: "E",
+const forStaticUnit = ({ type }, { affiliation }) => {
+  const sid = fixed[type]?.symbol;
+  const s = symbolCodes[sid];
+
+  return [
+    s.scheme,
+    affiliations[affiliation] || affiliations.unknown,
+    s.dimension,
+    status.present,
+    s.function || symbolCodes.unit,
+    s.modifier1,
+    s.modifier2,
+  ].join("");
 };
 
-const forGroundUnit = ({ type }, { affiliation }) =>
-  [
-    scheme.warfighting,
-    affiliations[affiliation] || affiliations.unknown,
-    dimension.groundUnit,
-    status.present,
-    symbolCodes[groundUnits[type]?.symbol]?.code || symbolCodes.unit,
-    modifier1.na,
-    modifier2.brigade,
-  ].join("");
+const forInstallation = ({ type }, { affiliation }) => {
+    const sid = inst[type]?.symbol;
+    const s = symbolCodes[sid];
 
-const forStaticUnit = ({ type }, { affiliation }) =>
-  [
-    scheme.warfighting,
-    affiliations[affiliation] || affiliations.unknown,
-    dimension.groundUnit,
-    status.present,
-    symbolCodes[staticUnits[type]?.symbol]?.code || symbolCodes.unit,
-    modifier1.na,
-    modifier2.battery,
-  ].join("");
-
-const forInstallation = ({ type }, { affiliation }) =>
-  [
-    scheme.warfighting,
-    affiliations[affiliation] || affiliations.unknown,
-    dimension.groundInstallation,
-    status.present,
-    symbolCodes[installations[type]?.symbol]?.code || symbolCodes.unit,
-    modifier1.installation,
-    modifier2.na,
-  ].join("");
+    return [
+        s.scheme,
+        affiliations[affiliation] || affiliations.unknown,
+        s.dimension,
+        status.present,
+        s.function || symbolCodes.installation,
+        s.modifier1,
+        s.modifier2,
+    ].join("");
+}
 
 export const SymbolCodes = { forGroundUnit, forInstallation, forStaticUnit };

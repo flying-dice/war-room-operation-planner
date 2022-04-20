@@ -1,22 +1,23 @@
 import Editor from "@monaco-editor/react";
-import { Icon, Stack, useTheme } from "@fluentui/react";
+import {Stack, useTheme} from "@fluentui/react";
 import React from "react";
-import { v4 } from "uuid";
+import {v4} from "uuid";
 import download from "js-file-download";
 import styles from "./Editor.module.css";
 import schema from "../validation/operation.schema.json";
 import shortId from "shortid";
-import { useValidator } from "../validation/useValidator";
-import { useMapbox } from "../@mapbox";
-import { useToast } from "../@ui/toasts/useToast";
-import { truncate } from "@turf/turf";
+import {useValidator} from "../validation/useValidator";
+import {useMapbox} from "../@mapbox";
+import {useToast} from "../@ui/toasts/useToast";
+import {truncate} from "@turf/turf";
+import {write} from 'clipboardy';
 
 const debug = require("debug")("flying-dice:CodeEditor");
 
 export const CodeEditor = ({ operation, onChange }) => {
   const { showError } = useToast();
   const { map, draw } = useMapbox();
-  const { semanticColors } = useTheme();
+  const { spacing, semanticColors } = useTheme();
   const { validateOperation, error } = useValidator();
 
   const handleEditorWillMount = (monaco) => {
@@ -97,6 +98,18 @@ export const CodeEditor = ({ operation, onChange }) => {
       },
     });
 
+    editor.addAction({
+      id: "export-base64",
+      label: "Copy as Base64 Encoded String",
+      contextMenuGroupId: "import-export",
+      run: async (ed) => {
+        debug("Copying Content %O", ed.getValue());
+        const content = btoa(ed.getValue());
+        await write(content);
+        debug("Copied %s", content)
+      },
+    });
+
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
       download(editor.getValue(), `export.json`, "application/json");
     });
@@ -113,7 +126,7 @@ export const CodeEditor = ({ operation, onChange }) => {
   };
 
   return (
-    <Stack>
+    <Stack styles={{root: {borderLeft: `solid ${error ? semanticColors.errorIcon : semanticColors.successIcon} ${spacing.s1}`}}}>
       {map && draw && (
         <Editor
           className={styles.editor}
@@ -128,13 +141,6 @@ export const CodeEditor = ({ operation, onChange }) => {
           }}
         />
       )}
-      <Icon
-        className={styles.validIcon}
-        style={{
-          color: error ? semanticColors.errorIcon : semanticColors.successIcon,
-        }}
-        iconName={error ? "StatusErrorFull" : "CompletedSolid"}
-      />
     </Stack>
   );
 };

@@ -5,6 +5,8 @@ import isUUID from "validator/es/lib/isUUID";
 import isISO8601 from "validator/es/lib/isISO8601";
 import isISO31661Alpha2 from "validator/es/lib/isISO31661Alpha2";
 
+const debug = require("debug")("flying-dice:war-room-operation-editor:useValidator");
+
 const ajv = new Ajv({ allowUnionTypes: true });
 ajv.addFormat("uuid", {
   type: "string",
@@ -32,7 +34,9 @@ export const useValidator = () => {
   const [error, setError] = useState("");
 
   const validateOperation = (operation) => {
+    debug("Validating Operation");
     if (!validate(operation)) {
+      debug("Operation Failed Validation")
       const err = JSON.stringify(validate.errors, undefined, 2);
       setError(err);
       throw new Error(err);
