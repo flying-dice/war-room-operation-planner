@@ -1,10 +1,11 @@
+import { useEffect, useMemo, useState } from "react";
 import { useMapbox } from "../@mapbox";
-import { useEffect, useState } from "react";
-import { useCreateId } from "../@ui/useCreateId";
-import { difference } from "@turf/turf";
 import { TurfUtils } from "../@turf";
-import { useMemoWithHash } from "./useMemoWithHash";
 import { config } from "../config";
+import { getDebugger } from "../debug";
+import { difference, dissolve } from "@turf/turf";
+import { useGeoJsonLayers } from "./useGeoJsonLayers";
+import { Layers } from "../layers";
 
 const wholeEarth = {
   type: "Polygon",
@@ -19,24 +20,36 @@ const wholeEarth = {
   ],
 };
 
-const debug = require("debug")("flying-dice:useGrid");
+const debug = getDebugger("useGrid");
 
-export const useGrid = (operation) => {
-  const { map, activeStyle } = useMapbox();
-  const area = useMemoWithHash(operation.area);
+export const useGrid = (area) => {
+  const { map } = useMapbox();
 
-  const [bboxsid] = useCreateId();
-  const [bboxlid] = useCreateId();
-  const [gsid] = useCreateId();
-  const [glidFill] = useCreateId();
-  const [glidLine] = useCreateId();
+  // Calculate Grid
+  const grid = useMemo(
+    () => TurfUtils.hexGrid(area, config.gridSide, config.intersectThreshold),
+    [map, area]
+  );
+
+  // Render Background for outside AO
+  useGeoJsonLayers(
+    useMemo(() => difference(wholeEarth, dissolve(grid).features[0]), [grid]),
+    useMemo(() => [{ type: "fill", paint: { "fill-opacity": 0.2 } }], [])
+  );
+
+  // Render Grid on Map
+  const gridLayer = useGeoJsonLayers(
+    grid,
+    useMemo(() => Layers.getGridFillLayers(), [])
+  );
+
   const [hoveredCell, setHoveredCell] = useState();
-  const [grid, setGrid] = useState();
 
+  // Registering Mouse Hover Listeners
   useEffect(() => {
     if (map && hoveredCell) {
       map.setFeatureState(
-        { source: gsid, id: hoveredCell?.id },
+        { source: gridLayer.id, id: hoveredCell?.id },
         { hover: true }
       );
     }
@@ -44,101 +57,25 @@ export const useGrid = (operation) => {
     return () => {
       if (map && hoveredCell) {
         map.setFeatureState(
-          { source: gsid, id: hoveredCell?.id },
+          { source: gridLayer.id, id: hoveredCell?.id },
           { hover: false }
         );
       }
     };
-  }, [map, hoveredCell]);
+  }, [map, hoveredCell, gridLayer]);
 
   useEffect(() => {
-    if (map && operation.area) {
-      debug("Drawing new Grid");
-      const grid_ = TurfUtils.hexGrid(
-        operation.area,
-        config.gridSide,
-        config.intersectThreshold
-      );
-
-      map.addSource(bboxsid, {
-        type: "geojson",
-        data: difference(wholeEarth, operation.area),
-      });
-      map.addLayer({
-        id: bboxlid,
-        source: bboxsid,
-        type: "fill",
-        paint: { "fill-opacity": 0.5 },
-      });
-
-      map.addSource(gsid, { type: "geojson", data: grid_ });
-      map.addLayer({
-        id: glidFill,
-        source: gsid,
-        type: "fill",
-        paint: {
-          "fill-opacity": [
-            "case",
-            ["boolean", ["feature-state", "hover"], false],
-            0.2,
-            0.1,
-          ],
-        },
-      });
-      map.on("mousemove", glidFill, ({ features }) => {
+    if (gridLayer?.id) {
+      debug("Watching for MouseMoves on %s", gridLayer.id);
+      map.on("mousemove", gridLayer.layerIds[0], ({ features }) => {
         setHoveredCell(features[0]);
       });
 
-      map.on("mouseleave", glidFill, () => {
+      map.on("mouseleave", gridLayer.layerIds[0], () => {
         setHoveredCell(undefined);
       });
-
-      map.addLayer({
-        id: glidLine,
-        source: gsid,
-        type: "line",
-        paint: {
-          "line-opacity": 0.1,
-          "line-width": 2,
-        },
-      });
-      setGrid(grid_);
     }
-
-    return () => {
-      setGrid(undefined);
-      if (map) {
-        try {
-          map.removeLayer(bboxlid);
-        } catch (e) {
-          debug(`Failed to Remove Layer with ID ${bboxlid} due to ${e}`);
-        }
-
-        try {
-          map.removeSource(bboxsid);
-        } catch (e) {
-          debug(`Failed to Remove Source with ID ${bboxsid} due to ${e}`);
-        }
-
-        try {
-          map.removeLayer(glidFill);
-        } catch (e) {
-          debug(`Failed to Remove Layer with ID ${glidFill} due to ${e}`);
-        }
-        try {
-          map.removeLayer(glidLine);
-        } catch (e) {
-          debug(`Failed to Remove Layer with ID ${glidLine} due to ${e}`);
-        }
-
-        try {
-          map.removeSource(gsid);
-        } catch (e) {
-          debug(`Failed to Remove Source with ID ${gsid} due to ${e}`);
-        }
-      }
-    };
-  }, [map, gsid, glidLine, glidFill, area, activeStyle]);
+  }, [map, gridLayer]);
 
   return { grid, hoveredCell };
 };

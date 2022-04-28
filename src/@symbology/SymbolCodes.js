@@ -1,9 +1,9 @@
 import { keyBy } from "lodash";
 import {
-  symbols,
+  groundUnits,
   installations,
   staticUnits,
-  groundUnits,
+  symbols,
 } from "@flying-dice/war-room-data";
 
 const symbolCodes = keyBy(symbols, "id");
@@ -18,11 +18,19 @@ const affiliations = {
   unknown: "U",
 };
 
-const status = {
+const statuses = {
   present: "P",
+  capable: "C",
+  damaged: "D",
+  destroyed: "X",
 };
 
-const forGroundUnit = ({ type }, { affiliation }) => {
+const echelons = {
+  division: "I",
+  brigade: "H",
+};
+
+const forGroundUnit = ({ type }, { affiliation, status, echelon }) => {
   const sid = ground[type]?.symbol;
   const s = symbolCodes[sid];
 
@@ -30,10 +38,10 @@ const forGroundUnit = ({ type }, { affiliation }) => {
     s.scheme,
     affiliations[affiliation] || affiliations.unknown,
     s.dimension,
-    status.present,
+    statuses[status],
     s.function || symbolCodes.unit,
     s.modifier1,
-    s.modifier2,
+    echelons[echelon],
   ].join("");
 };
 
@@ -45,7 +53,7 @@ const forStaticUnit = ({ type }, { affiliation }) => {
     s.scheme,
     affiliations[affiliation] || affiliations.unknown,
     s.dimension,
-    status.present,
+    statuses.present,
     s.function || symbolCodes.unit,
     s.modifier1,
     s.modifier2,
@@ -53,18 +61,18 @@ const forStaticUnit = ({ type }, { affiliation }) => {
 };
 
 const forInstallation = ({ type }, { affiliation }) => {
-    const sid = inst[type]?.symbol;
-    const s = symbolCodes[sid];
+  const sid = inst[type]?.symbol;
+  const s = symbolCodes[sid];
 
-    return [
-        s.scheme,
-        affiliations[affiliation] || affiliations.unknown,
-        s.dimension,
-        status.present,
-        s.function || symbolCodes.installation,
-        s.modifier1,
-        s.modifier2,
-    ].join("");
-}
+  return [
+    s.scheme,
+    affiliations[affiliation] || affiliations.unknown,
+    s.dimension,
+    statuses.present,
+    s.function || symbolCodes.installation,
+    s.modifier1,
+    s.modifier2,
+  ].join("");
+};
 
 export const SymbolCodes = { forGroundUnit, forInstallation, forStaticUnit };

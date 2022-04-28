@@ -43,13 +43,24 @@ export const Window = ({
         pointerEvents: "auto",
         resize: "both",
       },
+      scrollableContent: {
+        overflow: "hidden",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+      },
     }),
     []
   );
 
   const contentStyles = useMemo(
     () => ({
-      root: { padding: spacing.s1 },
+      root: {
+        padding: spacing.s1,
+        overflow: "auto",
+        display: "flex",
+        flexDirection: "column",
+      },
     }),
     [spacing]
   );

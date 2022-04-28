@@ -1,48 +1,57 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Stack } from "@fluentui/react";
 import styles from "./App.module.css";
 import { CodeEditor } from "./editor/CodeEditor";
 import { AppBar } from "./bar/AppBar";
 import { exampleOperation } from "./example";
-import { DrawCommandBar, Map } from "./@mapbox";
+import { DrawCommandBar, Map, useMapbox } from "./@mapbox";
 import { useGrid } from "./hooks/useGrid";
-import { Installation } from "./entity-renderers/Installation";
-import { GroundUnit } from "./entity-renderers/GroundUnit";
-import { StaticUnit } from "./entity-renderers/StaticUnit";
+import { Division } from "./entity-renderers/Division";
 import { InfoBar } from "./bar/InfoBar";
+import { OpordWindow } from "./opord/OpordWindow";
+import { PhaseLine } from "./entity-renderers/PhaseLine";
+import { center } from "@turf/turf";
 
 const App = () => {
   const [operation, setOperation] = useState(exampleOperation);
-  const { grid, hoveredCell } = useGrid(operation);
+  const [openOpord, setOpenOpord] = useState(false);
+  const { grid, hoveredCell } = useGrid(operation.area);
+  const { map } = useMapbox();
 
+  useEffect(() => {
+    if (map && operation.area) {
+      map.jumpTo({ center: center(operation.area).geometry.coordinates });
+    }
+  }, [map, operation]);
   return (
-    <Stack className={styles.appContainer}>
-      <AppBar className={styles.appBar} />
-      <CodeEditor operation={operation} onChange={setOperation} />
-      <Stack>
-        <DrawCommandBar />
-        <Map />
-        {operation.installations.map((it) => (
-          <Installation
-            key={it.id}
-            installation={it}
-            coalitions={operation.coalitions}
-          />
-        ))}
-        {operation.groundUnits.map((it) => (
-          <GroundUnit
-            key={it.id}
-            unit={it}
-            grid={grid}
-            coalitions={operation.coalitions}
-          />
-        ))}
-        {operation.staticUnits.map((it) => (
-          <StaticUnit key={it.id} unit={it} coalitions={operation.coalitions} />
-        ))}
+    <>
+      <Stack className={styles.appContainer}>
+        <AppBar className={styles.appBar} />
+        <CodeEditor operation={operation} onChange={setOperation} />
+        <Stack>
+          <DrawCommandBar onOpenOpord={() => setOpenOpord(true)} />
+          <Map />
+          {grid &&
+            operation.divisions.map((it) => (
+              <Division
+                key={it.id}
+                division={it}
+                corps={{ designation: "III" }}
+                grid={grid}
+              />
+            ))}
+          {operation.phaseLines.map((it) => (
+            <PhaseLine key={it.id} phaseLine={it} />
+          ))}
+        </Stack>
+        <InfoBar className={styles.infoBar} hoveredCell={hoveredCell} />
       </Stack>
-      <InfoBar className={styles.infoBar} hoveredCell={hoveredCell} />
-    </Stack>
+      <OpordWindow
+        isOpen={openOpord}
+        onDismiss={() => setOpenOpord(false)}
+        operation={operation}
+      />
+    </>
   );
 };
 

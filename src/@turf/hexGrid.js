@@ -7,6 +7,7 @@ import {
   intersect,
 } from "@turf/turf";
 import { featureId } from "../@mapbox";
+import { getCell } from "./getCell";
 
 /**
  * Gets the Cell at the top left of the grid by comparing the center of the cell to other cells
@@ -131,3 +132,28 @@ export const hexGrid = (feature, cellSide = 10, intersectThreshold = 0.1) => {
 
   return grid;
 };
+
+export const getGridNeighbours = ({ x, y }) => {
+  if (x % 2) {
+    return [
+      { x, y: y - 1 },
+      { x, y: y + 1 },
+      { y, x: x - 1 },
+      { y, x: x + 1 },
+      { y: y + 1, x: x - 1 },
+      { y: y + 1, x: x + 1 },
+    ];
+  }
+
+  return [
+    { x, y: y - 1 },
+    { x, y: y + 1 },
+    { y, x: x - 1 },
+    { y, x: x + 1 },
+    { y: y - 1, x: x - 1 },
+    { y: y - 1, x: x + 1 },
+  ];
+};
+
+export const getGridNeighboursCells = (grid, { x, y }) =>
+  getGridNeighbours({ x, y }).map((it) => getCell(grid, it));

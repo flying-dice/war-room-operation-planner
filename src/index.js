@@ -13,7 +13,7 @@ initializeIcons();
 const theme = createTheme({});
 
 if (window.location.hostname === "localhost") {
-  localStorage.debug = "*";
+  localStorage.debug = "mapbox:*,flying-dice:*";
 }
 
 ReactDOM.render(

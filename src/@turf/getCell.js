@@ -23,5 +23,5 @@ export const getCell = (grid, { x, y }) =>
  * @param y {number} Grid Y Coordinate
  * @return {Position} Lng Lat Position for Centre of Cell
  */
-export const getCellComPosition = (grid, { x, y }) =>
+export const getCellCenter = (grid, { x, y }) =>
   flow([getCell, center, getCoord])(grid, { x, y });

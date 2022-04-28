@@ -10,7 +10,7 @@ import { useCombineTool } from "./draw-hooks/useCombineTool";
 import { useMapbox } from "./useMapbox";
 import { config } from "./config";
 
-export const DrawCommandBar = () => {
+export const DrawCommandBar = ({ onOpenOpord }) => {
   const { activeStyle, toggleStyle } = useMapbox();
   const { combineFeatures, uncombineFeatures } = useCombineTool();
   const { enableDrawLineMode } = useLineTool();
@@ -85,6 +85,12 @@ export const DrawCommandBar = () => {
         onClick={toggleStyle}
       >
         {activeStyle === config.satelliteStyle ? "Normal" : "Satellite"}
+      </CommandBarButton>
+      <CommandBarButton
+        iconProps={{ iconName: "Preview" }}
+        onClick={onOpenOpord}
+      >
+        Preview OPORD
       </CommandBarButton>
     </Stack>
   );
