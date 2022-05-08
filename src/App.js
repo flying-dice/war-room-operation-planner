@@ -3,7 +3,6 @@ import { Stack } from "@fluentui/react";
 import styles from "./App.module.css";
 import { CodeEditor } from "./editor/CodeEditor";
 import { AppBar } from "./bar/AppBar";
-import { exampleOperation } from "./example";
 import { DrawCommandBar, Map, useMapbox } from "./@mapbox";
 import { useGrid } from "./hooks/useGrid";
 import { Division } from "./entity-renderers/Division";
@@ -11,16 +10,21 @@ import { InfoBar } from "./bar/InfoBar";
 import { OpordWindow } from "./opord/OpordWindow";
 import { PhaseLine } from "./entity-renderers/PhaseLine";
 import { center } from "@turf/turf";
+import { useOperation } from "./context/operation/useOperation";
+
+const corps= { uniqueDesignation: "III" }
 
 const App = () => {
-  const [operation, setOperation] = useState(exampleOperation);
+  const { operation, setOperation } = useOperation();
   const [openOpord, setOpenOpord] = useState(false);
-  const { grid, hoveredCell } = useGrid(operation.area);
+  const { grid, hoveredCell } = useGrid(operation.opord.situation.ao);
   const { map } = useMapbox();
 
   useEffect(() => {
-    if (map && operation.area) {
-      map.jumpTo({ center: center(operation.area).geometry.coordinates });
+    if (map && operation.opord.situation.ao) {
+      map.jumpTo({
+        center: center(operation.opord.situation.ao).geometry.coordinates,
+      });
     }
   }, [map, operation]);
   return (
@@ -36,11 +40,11 @@ const App = () => {
               <Division
                 key={it.id}
                 division={it}
-                corps={{ designation: "III" }}
+                corps={corps}
                 grid={grid}
               />
             ))}
-          {operation.phaseLines.map((it) => (
+          {operation.opord.linesOfOperation.map((it) => (
             <PhaseLine key={it.id} phaseLine={it} />
           ))}
         </Stack>

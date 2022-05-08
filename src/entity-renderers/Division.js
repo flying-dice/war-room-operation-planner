@@ -5,14 +5,16 @@ import { Brigade } from "./Brigade";
 import { TurfUtils } from "../@turf";
 import { useGeoJsonLayers } from "../hooks/useGeoJsonLayers";
 import { Layers } from "../layers";
-import { coalitionColor } from "../utils/coalition-color";
+import { affiliationColor } from "../utils/affiliation-color";
 import { useMilSymbol } from "../hooks/useMilSymbol";
 import { SymbolFactory } from "../@symbology";
 import { featureCollection } from "@turf/turf";
+import { useAffiliation } from "../hooks/useAffiliation";
 
 export const Division = ({ division, corps, grid }) => {
   const { spacing } = useTheme();
   const [showWindow, setShowWindow] = useState(false);
+  const affiliation = useAffiliation(division.country);
 
   const divisionPos = useMemo(
     () => TurfUtils.getCellCenter(grid, division.location),
@@ -23,10 +25,8 @@ export const Division = ({ division, corps, grid }) => {
   useGeoJsonLayers(
     useMemo(() => TurfUtils.getCell(grid, division.location), [division, grid]),
     useMemo(
-      () => [
-        Layers.getDivisionFill({ color: coalitionColor[division.coalition] }),
-      ],
-      [division.coalition]
+      () => [Layers.getDivisionFill({ color: affiliationColor[affiliation] })],
+      [division.country]
     )
   );
 
@@ -42,16 +42,19 @@ export const Division = ({ division, corps, grid }) => {
     useMemo(
       () => [
         Layers.getDivisionInfluenceFill({
-          color: coalitionColor[division.coalition],
+          color: affiliationColor[affiliation],
         }),
       ],
-      [division.coalition]
+      [division.country]
     )
   );
 
   // Draw Division on Map
   useMilSymbol(
-    useMemo(() => SymbolFactory.forGroundUnit(division, corps), [Division]),
+    useMemo(
+      () => SymbolFactory.forGroundUnit(division, corps, { affiliation }),
+      [division, corps]
+    ),
     divisionPos,
     () => setShowWindow(true)
   );

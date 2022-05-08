@@ -8,6 +8,7 @@ import { createTheme, ThemeProvider } from "@fluentui/react";
 import { initializeIcons } from "@fluentui/font-icons-mdl2";
 import { MapboxProvider } from "./@mapbox";
 import { ToastProvider } from "./@ui/toasts/ToastProvider";
+import { OperationProvider } from "./context/operation/OperationProvider";
 
 initializeIcons();
 const theme = createTheme({});
@@ -21,7 +22,9 @@ ReactDOM.render(
     <ThemeProvider theme={theme}>
       <ToastProvider>
         <MapboxProvider>
-          <App />
+          <OperationProvider>
+            <App />
+          </OperationProvider>
         </MapboxProvider>
       </ToastProvider>
     </ThemeProvider>

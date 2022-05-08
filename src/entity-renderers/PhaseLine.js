@@ -4,7 +4,7 @@ import { useMemo } from "react";
 
 export const PhaseLine = ({ phaseLine }) => {
   useGeoJsonLayers(
-    phaseLine.location,
+    phaseLine.line,
     useMemo(
       () => Layers.getPhaseLineLayers({ label: `PL ${phaseLine.name}` }),
       [phaseLine.name]

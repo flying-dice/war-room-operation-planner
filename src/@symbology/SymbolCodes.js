@@ -12,10 +12,10 @@ const fixed = keyBy(staticUnits, "id");
 const inst = keyBy(installations, "id");
 
 const affiliations = {
-  friend: "F",
-  neutral: "N",
-  hostile: "H",
-  unknown: "U",
+  FRIEND: "F",
+  NEUTRAL: "N",
+  HOSTILE: "H",
+  UNKNOWN: "U",
 };
 
 const statuses = {
@@ -26,8 +26,8 @@ const statuses = {
 };
 
 const echelons = {
-  division: "I",
-  brigade: "H",
+  DIVISION: "I",
+  BRIGADE: "H",
 };
 
 const forGroundUnit = ({ type }, { affiliation, status, echelon }) => {
